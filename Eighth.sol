@@ -76,19 +76,19 @@ contract Tree {
             hashes.push(keccak256(abi.encodePacked(transactions[i])));
         }
 
-        // uint offset = 0;
-        // while (count > 0) {
-        //     for (uint i = 0; i < count - 1; i += 2) {
-        //         // используем keccak256, а не makeHash так как makeHash принимает только строки, а encodePacked возвращает байты
-        //         hashes.push(keccak256(
-        //             abi.encodePacked(
-        //                 hashes[offset + i], hashes[offset + i + 1]
-        //             )
-        //         ));
-        //     }
-        //     offset += count;
-        //     count /= 2;
-        // }
+        uint offset = 0;
+        while (count > 0) {
+            for (uint i = 0; i < count - 1; i += 2) {
+                // используем keccak256, а не makeHash так как makeHash принимает только строки, а encodePacked возвращает байты
+                hashes.push(keccak256(
+                    abi.encodePacked(
+                        hashes[offset + i], hashes[offset + i + 1]
+                    )
+                ));
+            }
+            offset += count;
+            count /= 2;
+        }
 
         // на n элементов нужно сделать n+n-1 операций хеширования
         // первые n операций делаем в цикле выше
@@ -104,10 +104,9 @@ contract Tree {
     }
 
     // будет говорить всё впорядке с транзакцией или нет
-    // index - индекс транзакции в блоке
     // root - корневой хеш
     // proof - массив с данными, которые нужны чтобы подтвердить транзакцию
-    function verify(string memory transaction, uint index, bytes32 root, bytes32[] memory proof) public pure returns(bool) {
+    function verify(string memory transaction, bytes32 root, bytes32[] memory proof) public pure returns(bool) {
         bytes32 hash = makeHash(transaction);
         // реализуем цикл, который будет обходить массив proof
         for (uint i = 0; i < proof.length; i++) {
@@ -119,9 +118,6 @@ contract Tree {
             } else {
                 hash = keccak256(abi.encodePacked(hash, element));
             }
-            // далее поднимаемся на следующий уровень древа
-            // там в 2 раза меньше элементов
-            index /= 2;
         }
         return root == hash;
     }
